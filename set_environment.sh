@@ -17,7 +17,7 @@ check_for_internet "$@"
 
 arch_packages=("bluez" "bluez-utils" "git" "less")
 
-echo "Installing dependencies"
+echo "Installing pacman packages"
 
 if [[ -f /etc/arch-release ]]; then
 	for package in "${arch_packages[@]}"; do
@@ -33,19 +33,30 @@ else
 fi
 
 # Install yay (AUR helper)
-echo "Installing yay..."
-git clone https://aur.archlinux.org/yay.git
-cd yay || exit
-makepkg -si
-cd ../
-
-# Install yay extensions and programs
-echo "yay Installing extensions and programs..."
-if yay -S --noconfirm gnome-shell-extensions gnome-shell-extension-appindicator vscodium-bin; then
-	echo "Extensions installed successfully."
+if ! sudo pacman -Q yay >/dev/null 2>&1; then
+	echo "yay is not installed. Installing..."
+	git clone https://aur.archlinux.org/yay.git
+	cd yay || exit
+	makepkg -si
+	cd ../
 else
-	echo "Failed to install extensions. Please check yay for errors."
+	echo "yay is already installed."
 fi
+
+# Install yay packages
+yay_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
+
+echo "Installing yay packages"
+for package in "${yay_packages[@]}"; do
+	if ! yay -Q "$package" >/dev/null 2>&1; then
+		yay -S --noconfirm --needed "$package"
+	else
+		echo "$package is already installed."
+	fi
+done
+
+# Set git editor to nano
+git config --global core.editor "nano"
 
 # Enable Bluetooth
 if [ -f /etc/bluetooth/main.conf ]; then
@@ -54,6 +65,7 @@ if [ -f /etc/bluetooth/main.conf ]; then
 	if sudo sed -i 's/#AutoEnable=true/AutoEnable=true/' /etc/bluetooth/main.conf; then
 		sudo systemctl start bluetooth.service
 		sudo systemctl enable bluetooth.service
+		echo "Bluetooth configuration successful."
 	else
 		echo "Failed to enable Bluetooth. Exiting script."
 		exit 1
@@ -63,12 +75,9 @@ else
 	exit 1
 fi
 
-# Set git editor to nano
-git config --global core.editor "nano"
-
 # Configure zram swap
 if [ -f /etc/systemd/zram-generator.conf ]; then
-	echo "Configuring zram..."
+	echo "Enabling zram..."
 	sudo cp /etc/systemd/zram-generator.conf /etc/systemd/zram-generator.conf.bak
 	if sudo tee /etc/systemd/zram-generator.conf >/dev/null <<EOF
 [zram0]
