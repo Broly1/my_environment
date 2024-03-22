@@ -15,7 +15,7 @@ check_for_internet "$@"
 
 # Install the missing packages if we don't have them
 
-arch_packages=("bluez" "bluez-utils" "git" "less")
+arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel")
 
 echo "Installing pacman packages"
 
@@ -32,24 +32,25 @@ else
 	exit 1
 fi
 
-# Install yay (AUR helper)
-if ! sudo pacman -Q yay >/dev/null 2>&1; then
-	echo "yay is not installed. Installing..."
-	git clone https://aur.archlinux.org/yay.git
-	cd yay || exit
+# Install paru (AUR helper)
+if ! sudo pacman -Q paru >/dev/null 2>&1; then
+	echo "paru is not installed. Installing..."
+	git clone https://aur.archlinux.org/paru.git
+	cd paru || exit
 	makepkg -si
 	cd ../
+	rm -rf paru/
 else
-	echo "yay is already installed."
+	echo "paru is already installed."
 fi
 
-# Install yay packages
-yay_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
+# Install paru packages
+paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
 
-echo "Installing yay packages"
-for package in "${yay_packages[@]}"; do
-	if ! yay -Q "$package" >/dev/null 2>&1; then
-		yay -S --noconfirm --needed "$package"
+echo "Installing paru packages"
+for package in "${paru_packages[@]}"; do
+	if ! paru -Q "$package" >/dev/null 2>&1; then
+		paru -S --noconfirm --needed "$package"
 	else
 		echo "$package is already installed."
 	fi
@@ -61,7 +62,7 @@ git config --global core.editor "nano"
 # Enable Bluetooth
 if [ -f /etc/bluetooth/main.conf ]; then
 	echo "Enabling Bluetooth..."
-	sudo cp /etc/bluetooth/main.conf /etc/bluetooth/main.conf.bak
+	sudo cp /etc/bluetooth/main.conf /etc/bluetooth/main.conf.backup
 	if sudo sed -i 's/#AutoEnable=true/AutoEnable=true/' /etc/bluetooth/main.conf; then
 		sudo systemctl start bluetooth.service
 		sudo systemctl enable bluetooth.service
@@ -78,7 +79,7 @@ fi
 # Configure zram swap
 if [ -f /etc/systemd/zram-generator.conf ]; then
 	echo "Enabling zram..."
-	sudo cp /etc/systemd/zram-generator.conf /etc/systemd/zram-generator.conf.bak
+	sudo cp /etc/systemd/zram-generator.conf /etc/systemd/zram-generator.conf.backup
 	if sudo tee /etc/systemd/zram-generator.conf >/dev/null <<EOF
 [zram0]
 zram-size = ram
@@ -111,6 +112,7 @@ case "$choice" in
 		cd scripts/ || exit
 		bash setup/arch-manjaro.sh
 		cd ../
+		rm -rf scripts/
 		;;
 	*)
 		echo "Skipping Android environment setup."
