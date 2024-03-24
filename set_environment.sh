@@ -56,12 +56,6 @@ for package in "${paru_packages[@]}"; do
 	fi
 done
 
-# Set git editor to nano
-git config --global core.editor "nano"
-
-# Fix folders opening in VSCodium instead of file manager.
-xdg-mime default org.gnome.Nautilus.desktop inode/directory
-
 # Enable Bluetooth
 if [ -f /etc/bluetooth/main.conf ]; then
 	echo "Enabling Bluetooth..."
@@ -97,6 +91,12 @@ else
 	echo "zram configuration file not found. Exiting script."
 	exit 1
 fi
+
+# Set git editor to nano
+git config --global core.editor "nano"
+
+# Fix folders opening in VSCodium instead of file manager.
+xdg-mime default org.gnome.Nautilus.desktop inode/directory
 
 # Set custom keybinding for gnome shell terminal (Ctrl+Alt+T)
 gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']"
