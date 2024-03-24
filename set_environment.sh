@@ -59,6 +59,9 @@ done
 # Set git editor to nano
 git config --global core.editor "nano"
 
+# Fix folders opening in VSCodium instead of file manager.
+xdg-mime default org.gnome.Nautilus.desktop inode/directory
+
 # Enable Bluetooth
 if [ -f /etc/bluetooth/main.conf ]; then
 	echo "Enabling Bluetooth..."
