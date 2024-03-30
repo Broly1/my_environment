@@ -15,7 +15,7 @@ check_for_internet "$@"
 
 # Install the missing packages if we don't have them
 
-arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel")
+arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools")
 
 echo "Installing pacman packages"
 
