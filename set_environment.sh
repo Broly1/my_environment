@@ -44,7 +44,7 @@ else
 	echo "paru is already installed."
 fi
 
-# Install paru packages
+# Install aur packages
 paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
 
 echo "Installing paru packages"
@@ -92,6 +92,9 @@ else
 	exit 1
 fi
 
+# Enable appindicator extension
+gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
+
 # Set git editor to nano
 git config --global core.editor "nano"
 
@@ -103,6 +106,9 @@ gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "[
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'Console'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command 'kgx'
 gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding '<Primary><Alt>t'
+
+# change theme to dark
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 
 # Android environment setup (optional)
 echo "Setup Android environment? (y/N)"
