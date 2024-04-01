@@ -3,8 +3,8 @@
 # Check for internet connectivity
 check_for_internet() {
 	clear
-	if ping -q -c 1 -W 1 google.com >/dev/null; then
-		echo "We do have internet connection"
+    if ping -q -c 1 -W 1 google.com >/dev/null 2>&1; then
+        :
 	else
 		echo "No internet connection. Unable to download dependencies."
 		exit 1
@@ -14,10 +14,8 @@ check_for_internet() {
 check_for_internet "$@"
 
 # Install the missing packages if we don't have them
-
 arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools")
-
-echo "Installing pacman packages"
+echo "Installing pacman pkgs: "${arch_packages[@]}""
 
 if [[ -f /etc/arch-release ]]; then
 	for package in "${arch_packages[@]}"; do
@@ -46,8 +44,7 @@ fi
 
 # Install aur packages
 paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
-
-echo "Installing paru packages"
+echo "Installing aur pkgs: "${paru_packages[@]}""
 for package in "${paru_packages[@]}"; do
 	if ! paru -Q "$package" >/dev/null 2>&1; then
 		paru -S --noconfirm --needed "$package"
