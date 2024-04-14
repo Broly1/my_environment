@@ -14,7 +14,7 @@ check_for_internet() {
 check_for_internet "$@"
 
 # Install the missing packages if we don't have them
-arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust")
+arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "chromium")
 echo "Installing pacman pkgs: "${arch_packages[@]}""
 
 if [[ -f /etc/arch-release ]]; then
@@ -43,7 +43,7 @@ else
 fi
 
 # Install aur packages
-paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin")
+paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin" "adw-gtk3")
 echo "Installing aur pkgs: "${paru_packages[@]}""
 for package in "${paru_packages[@]}"; do
 	if ! paru -Q "$package" >/dev/null 2>&1; then
@@ -68,6 +68,21 @@ if [ -f /etc/bluetooth/main.conf ]; then
 else
 	echo "Bluetooth configuration file not found. Exiting script."
 	exit 1
+fi
+
+# Enable bash color and 15 simultaneous Downloads
+if [ -f /etc/pacman.conf ]; then
+    echo "Enabling bash colors and simultaneous downloads..."
+    sudo cp /etc/pacman.conf /etc/pacman.conf.backup
+    if sudo sed -i 's/#Color/Color/' /etc/pacman.conf && sudo sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 15/' /etc/pacman.conf; then
+        echo "Bash color and ParallelDownloads enabled..."
+    else
+        echo "Failed to enable bash colors or ParallelDownloads. Exiting script."
+        exit 1
+    fi
+else
+    echo "pacman.conf not found. Exiting script."
+    exit 1
 fi
 
 # Configure zram swap
