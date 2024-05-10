@@ -14,7 +14,7 @@ check_for_internet() {
 check_for_internet "$@"
 
 # Install the missing packages if we don't have them
-arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "chromium")
+arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "firefox")
 echo "Installing pacman pkgs: "${arch_packages[@]}""
 
 if [[ -f /etc/arch-release ]]; then
