@@ -14,7 +14,7 @@ check_for_internet() {
 check_for_internet "$@"
 
 # Install the missing packages if we don't have them
-arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "firefox")
+arch_packages=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "firefox" "papirus-icon-theme")
 echo "Installing pacman pkgs: "${arch_packages[@]}""
 
 if [[ -f /etc/arch-release ]]; then
@@ -43,7 +43,7 @@ else
 fi
 
 # Install aur packages
-paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin" "adw-gtk3")
+paru_packages=("vscodium-bin")
 echo "Installing aur pkgs: "${paru_packages[@]}""
 for package in "${paru_packages[@]}"; do
 	if ! paru -Q "$package" >/dev/null 2>&1; then
@@ -103,24 +103,6 @@ else
 	echo "zram configuration file not found. Exiting script."
 	exit 1
 fi
-
-# Enable appindicator extension
-gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
-
-# Set git editor to nano
-git config --global core.editor "nano"
-
-# Fix folders opening in VSCodium instead of file manager.
-xdg-mime default org.gnome.Nautilus.desktop inode/directory
-
-# Set custom keybinding for gnome shell terminal (Ctrl+Alt+T)
-gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']"
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ name 'Console'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ command 'kgx'
-gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/ binding '<Primary><Alt>t'
-
-# change theme to dark
-gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 
 # Android environment setup (optional)
 echo "Setup Android environment? (y/N)"
