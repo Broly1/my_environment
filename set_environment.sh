@@ -104,6 +104,9 @@ else
 	exit 1
 fi
 
+# Set git editor to nano
+git config --global core.editor "nano"
+
 # Android environment setup (optional)
 echo "Setup Android environment? (y/N)"
 read -r choice
