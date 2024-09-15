@@ -30,24 +30,31 @@ else
 	exit 1
 fi
 
-# Install paru (AUR helper)
-if ! sudo pacman -Q paru >/dev/null 2>&1; then
-	echo "paru is not installed. Installing..."
-	git clone https://aur.archlinux.org/paru.git
-	cd paru || exit
-	makepkg -si
-	cd ../
-	rm -rf paru/
+# Install yay (AUR helper)
+yay_dir="yay"
+if ! sudo pacman -Q yay >/dev/null 2>&1; then
+    echo "yay is not installed. Installing..."
+    if [ -d "$yay_dir" ]; then
+        echo "Removing existing $yay_dir directory..."
+        rm -rf "$yay_dir"
+    fi
+    echo "Cloning yay repository..."
+    git clone https://aur.archlinux.org/yay.git "$yay_dir"
+    cd "$yay_dir" || exit
+    echo "Building and installing yay..."
+    makepkg -si --noconfirm
+    cd ..
+    rm -rf "$yay_dir"
 else
-	echo "paru is already installed."
+    echo "yay is already installed."
 fi
 
 # Install aur packages
-paru_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin" "adw-gtk3")
-echo "Installing aur pkgs: "${paru_packages[@]}""
-for package in "${paru_packages[@]}"; do
-	if ! paru -Q "$package" >/dev/null 2>&1; then
-		paru -S --noconfirm --needed "$package"
+yay_packages=("gnome-shell-extensions" "gnome-shell-extension-appindicator" "vscodium-bin" "adw-gtk-theme")
+echo "Installing aur pkgs: "${yay_packages[@]}""
+for package in "${yay_packages[@]}"; do
+	if ! yay -Q "$package" >/dev/null 2>&1; then
+		yay -S --noconfirm --needed "$package"
 	else
 		echo "$package is already installed."
 	fi
@@ -103,9 +110,6 @@ else
 	echo "zram configuration file not found. Exiting script."
 	exit 1
 fi
-
-# Enable appindicator extension
-gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
 
 # Set git editor to nano
 git config --global core.editor "nano"
