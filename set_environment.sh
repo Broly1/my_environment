@@ -1,5 +1,8 @@
 #!/bin/bash
 
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf $TEMP_DIR" EXIT
+
 # Check for internet connectivity
 check_for_internet() {
     clear
@@ -11,7 +14,7 @@ check_for_internet() {
 
 # Install packages using pacman if not already installed
 install_pacman_packages() {
-    ARCH_PACKAGES=("bluez" "bluez-utils" "git" "less" "base-devel" "dosfstools" "rust" "firefox" \
+    ARCH_PACKAGES=("sed" "bluez" "bluez-utils" "telegram-desktop" "git" "less" "base-devel" "dosfstools" "rust" "firefox" \
                    "papirus-icon-theme" "spectacle" "gwenview" "kdeconnect" "kcalc" "packagekit-qt6" \
                    "flatpak" "gnome-disk-utility" "qbittorrent" "gimp" "plasma-workspace")
 
@@ -35,12 +38,11 @@ install_pacman_packages() {
 install_yay() {
     if ! pacman -Q yay >/dev/null 2>&1; then
         echo "yay is not installed. Installing..."
-        YAY_DIR=$(mktemp -d)
-        git clone https://aur.archlinux.org/yay.git "$YAY_DIR"
-        cd "$YAY_DIR" || exit
+        git clone https://aur.archlinux.org/yay.git "$TEMP_DIR/yay"
+        cd "$TEMP_DIR/yay" || exit
         makepkg -si --noconfirm
-        cd - || exit
-        rm -rf "$YAY_DIR"
+        cd - || exit  
+        rm -rf "$TEMP_DIR/yay"
     else
         echo "yay is already installed."
     fi
@@ -123,12 +125,10 @@ configure_git() {
 
 # Bash-it setup and theme change
 install_bash_it() {
-    TEMP_DIR=$(mktemp -d)
     git clone --depth=1 https://github.com/Bash-it/bash-it.git "$TEMP_DIR/bash-it"
     mv "$TEMP_DIR/bash-it" ~/.bash_it
-    rm -rf "$TEMP_DIR"
     ~/.bash_it/install.sh
-
+    rm -rf "$TEMP_DIR/bash-it"
     if sudo sed -i "s/^export BASH_IT_THEME=.*/export BASH_IT_THEME='zork'/" ~/.bashrc; then
         echo "Bash-it theme changed to 'zork'."
     else
@@ -137,7 +137,7 @@ install_bash_it() {
     fi
 }
 
-# change theme to dark and icons to papirus dark
+# change theme to dark and icons to papirus dark wallpaper to reef
 change_theme_and_icons() {
     lookandfeeltool -a org.kde.breezedark.desktop
 
@@ -148,6 +148,43 @@ else
     echo "Error: Icon theme 'Papirus-Dark' not found."
 fi
 
+if [ -d "wallpaper/Reef/" ]; then
+    sudo cp -r "wallpaper/Reef/" "/usr/share/wallpapers/"
+    echo "Wallpapers copied successfully."
+else
+    echo "Source directory does not exist."
+    exit 1
+fi
+}
+
+mod_my_panel() {
+    CONFIG_DIR="$HOME/.config"
+    PANEL_CONFIG_DIR="panel-config"
+
+if [ ! -d "$PANEL_CONFIG_DIR" ]; then
+    echo "Panel config directory not found, exiting."
+    exit 1
+fi
+
+    FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc")
+
+    for FILE in "${FILES[@]}"; do
+        if [ -f "$CONFIG_DIR/$FILE" ]; then
+            echo "Backing up $FILE to $CONFIG_DIR/${FILE}.bak"
+            mv "$CONFIG_DIR/$FILE" "$CONFIG_DIR/$FILE.bak"
+        else
+            echo "File $FILE does not exist in $CONFIG_DIR, skipping backup."
+        fi
+        
+        if [ -f "$PANEL_CONFIG_DIR/$FILE" ]; then
+            echo "Copying modified $FILE from $PANEL_CONFIG_DIR to $CONFIG_DIR"
+            cp "$PANEL_CONFIG_DIR/$FILE" "$CONFIG_DIR/$FILE"
+        else
+            echo "Modified file $FILE not found in $PANEL_CONFIG_DIR, skipping overwrite."
+        fi
+    done
+
+    echo "Backup and overwrite completed successfully!"
 }
 
 # Install SDDM theme
@@ -184,7 +221,6 @@ setup_android_env() {
         y|Y)
             check_for_internet
             echo "Setting up Android environment..."
-            TEMP_DIR=$(mktemp -d)
             git clone https://github.com/akhilnarang/scripts "$TEMP_DIR/scripts"
             cd "$TEMP_DIR/scripts" || exit
             bash setup/arch-manjaro.sh
@@ -209,6 +245,7 @@ main() {
     configure_git
     install_bash_it
     change_theme_and_icons
+    mod_my_panel
     install_sddm_theme
     setup_android_env
 }
