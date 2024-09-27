@@ -34,28 +34,28 @@ install_pacman_packages() {
     fi
 }
 
-# Install yay AUR helper if not already installed
-install_yay() {
-    if ! pacman -Q yay >/dev/null 2>&1; then
-        echo "yay is not installed. Installing..."
-        git clone https://aur.archlinux.org/yay.git "$TEMP_DIR/yay"
-        cd "$TEMP_DIR/yay" || exit
+# Install paru AUR helper if not already installed
+install_paru() {
+    if ! pacman -Q paru >/dev/null 2>&1; then
+        echo "paru is not installed. Installing..."
+        git clone https://aur.archlinux.org/paru-bin.git "$TEMP_DIR/paru-bin"
+        cd "$TEMP_DIR/paru-bin" || exit
         makepkg -si --noconfirm
         cd - || exit  
-        rm -rf "$TEMP_DIR/yay"
+        rm -rf "$TEMP_DIR/paru-bin"
     else
-        echo "yay is already installed."
+        echo "paru is already installed."
     fi
 }
 
-# Install AUR packages using yay
+# Install AUR packages using paru
 install_aur_packages() {
-    YAY_PACKAGES=("vscodium-bin" "papirus-folders" "ttf-jetbrains-mono")
-    echo "Installing AUR packages: ${YAY_PACKAGES[*]}"
+    PARU_PACKAGES=("vscodium-bin" "papirus-folders" "ttf-jetbrains-mono")
+    echo "Installing AUR packages: ${PARU_PACKAGES[*]}"
 
-    for PACKAGE in "${YAY_PACKAGES[@]}"; do
-        if ! yay -Q "$PACKAGE" >/dev/null 2>&1; then
-            yay -S --noconfirm --needed "$PACKAGE"
+    for PACKAGE in "${PARU_PACKAGES[@]}"; do
+        if ! paru -Q "$PACKAGE" >/dev/null 2>&1; then
+            paru -S --noconfirm --needed "$PACKAGE"
         else
             echo "$PACKAGE is already installed."
         fi
@@ -166,7 +166,7 @@ if [ ! -d "$PANEL_CONFIG_DIR" ]; then
     exit 1
 fi
 
-    FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc")
+    FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc" "kwinrc")
 
     for FILE in "${FILES[@]}"; do
         if [ -f "$CONFIG_DIR/$FILE" ]; then
@@ -237,7 +237,7 @@ setup_android_env() {
 main() {
     check_for_internet
     install_pacman_packages
-    install_yay
+    install_paru
     install_aur_packages
     enable_bluetooth
     configure_pacman
