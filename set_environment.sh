@@ -125,10 +125,10 @@ configure_git() {
 
 # Bash-it setup and theme change
 install_bash_it() {
-    TEMP_DIR=$(mktemp -d)
+    rm -rf "$HOME/.bash_it"
     git clone --depth=1 https://github.com/Bash-it/bash-it.git "$TEMP_DIR/bash-it"
     mv "$TEMP_DIR/bash-it" ~/.bash_it
-    ~/.bash_it/install.sh --silent
+    ~/.bash_it/install.sh --silent -f
     rm -rf "$TEMP_DIR"
     if sudo sed -i "s/^export BASH_IT_THEME=.*/export BASH_IT_THEME='zork'/" ~/.bashrc; then
         echo "Bash-it theme changed to 'zork'."
@@ -138,7 +138,6 @@ install_bash_it() {
     fi
 }
 
-# Change look and feel theme icons and wallpaper and sddm theme
 mod_my_plasma() {
     ORIG_CONF_DIR="$HOME/.config"
     CUST_CONF_DIR="plasma-config"
@@ -148,38 +147,15 @@ mod_my_plasma() {
     DEST_CONF="/etc/sddm.conf"
     TMP_FILE="/tmp/sddm.conf.modified"
 
-    if ! lookandfeeltool -a org.kde.breezedark.desktop; then
-        echo "Failed to change look and feel."
-        exit 1
-    fi
-
-    # This command changes the icon theme to Papirus-Dark
-    if [[ -d "/usr/share/icons/Papirus-Dark" ]]; then
-        if ! /usr/lib/plasma-changeicons Papirus-Dark; then
-            echo "Failed to change icon theme."
-            exit 1
-        fi
-        echo "Icon theme changed to Papirus-Dark."
-    else
-        echo "Error: Icon theme 'Papirus-Dark' not found."
-        exit 1
-    fi
-
-    # Set my wallpaper
-    if [ -d "$CUST_CONF_DIR/wallpaper/Reef" ]; then
-        if ! sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/" "/usr/share/wallpapers/"; then
-            echo "Failed to copy wallpapers."
-            exit 1
-        fi
-
-        # Backup existing configuration files and install my custom ones
+    # Backup existing configuration files and install my custom ones
         mkdir -p "$BACKUP_DIR"
-        FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc" "kwinrc" "powerdevilrc")
+        FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc" "kwinrc" "powerdevilrc" "kscreenlockerrc")
 
         for FILE in "${FILES[@]}"; do
             if [ -f "$ORIG_CONF_DIR/$FILE" ]; then
                 echo "Backing up $FILE to $BACKUP_DIR/${FILE}.bak"
                 cp "$ORIG_CONF_DIR/$FILE" "$BACKUP_DIR/$FILE.bak"
+                rm -rf "$ORIG_CONF_DIR/$FILE"
             else
                 echo "File $FILE does not exist in $ORIG_CONF_DIR, skipping backup."
             fi
@@ -192,70 +168,68 @@ mod_my_plasma() {
             fi
         done
 
-        # Update SDDM theme to Breeze with my custom wallpaper
-        if [ -d "$ORIG_SDDM_THEME" ]; then
-            if ! sudo cp -r "$CUST_CONF_DIR/theme.conf.user" "$ORIG_SDDM_THEME"; then
-                echo "Failed to copy SDDM theme config."
-                exit 1
-            fi
-            if ! sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/reef.png" "$ORIG_SDDM_THEME"; then
-                echo "Failed to copy SDDM wallpaper."
-                exit 1
-            fi
-        else
-            echo "SDDM theme directory not found."
-        fi
-
-        if [ -f "$SDDM_CONF" ]; then
-            echo "Enabling Breeze SDDM theme..."
-            if [ ! -f "$DEST_CONF" ]; then
-                sudo cp "$SDDM_CONF" "$DEST_CONF"
-            fi
-
-            sudo cp "$DEST_CONF" "$TMP_FILE"
-
-            if sudo sed -i 's/Current=.*/Current=breeze/' "$TMP_FILE" &&
-               sudo sed -i 's/CursorTheme=.*/CursorTheme=breeze/' "$TMP_FILE"; then
-                sudo mv "$TMP_FILE" "$DEST_CONF"
-                echo "Breeze SDDM theme enabled..."
-            else
-                echo "Failed to modify the SDDM configuration. Exiting script."
-                exit 1
-            fi
-        else
-            echo "$SDDM_CONF not found. Exiting script."
-            exit 1
-        fi
-
-        if ! plasma-apply-wallpaperimage "/usr/share/wallpapers/Reef/reef.png"; then
-            echo "Failed to apply wallpaper."
-            exit 1
-        fi
-        echo "Wallpapers copied successfully."
+    # Change look and feel
+    if lookandfeeltool -a org.kde.breezedark.desktop; then
+        echo "Look and feel changed to breeze dark."
     else
-        echo "Source directory does not exist."
+        echo "Look and feel failed to change theme."
         exit 1
     fi
-}
 
-# Optionally install android enviroment
-setup_android_env() {
-    echo "Setup Android environment? (y/N)"
-    read -r CHOICE
-    case "$CHOICE" in
-        y|Y)
-            check_for_internet
-            echo "Setting up Android environment..."
-            git clone https://github.com/akhilnarang/scripts "$TEMP_DIR/scripts"
-            cd "$TEMP_DIR/scripts" || exit
-            bash setup/arch-manjaro.sh
-            cd - || exit
-            rm -rf "$TEMP_DIR"
-            ;;
-        *)
-            echo "Skipping Android environment setup."
-            ;;
-    esac
+    # Change icon theme
+    if [[ -d "/usr/share/icons/Papirus-Dark" ]] && /usr/lib/plasma-changeicons Papirus-Dark; then
+        echo "Icon theme changed to Papirus-Dark."
+    else
+        echo "Error: Icon theme 'Papirus-Dark' not found or failed to change."
+        exit 1
+    fi
+
+    # Set wallpaper and update SDDM theme
+    if [ -d "$CUST_CONF_DIR/wallpaper/Reef" ]; then
+        sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/" "/usr/share/wallpapers/"
+    else
+        echo "Failed to copy wallpapers."
+        exit 1
+    fi
+
+    if [ -d "$ORIG_SDDM_THEME" ]; then
+        sudo cp -r "$CUST_CONF_DIR/theme.conf.user" "$ORIG_SDDM_THEME"
+        sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/reef.png" "$ORIG_SDDM_THEME"
+    else
+        echo "SDDM theme directory not found."
+        exit 1
+    fi
+
+    if [ -f "$SDDM_CONF" ]; then
+        echo "Enabling Breeze SDDM theme..."
+        [ ! -f "$DEST_CONF" ] && sudo cp "$SDDM_CONF" "$DEST_CONF"
+        sudo cp "$DEST_CONF" "$TMP_FILE"
+
+        if sudo sed -i 's/Current=.*/Current=breeze/; s/CursorTheme=.*/CursorTheme=breeze/' "$TMP_FILE"; then
+            sudo mv "$TMP_FILE" "$DEST_CONF"
+            echo "Breeze SDDM theme enabled..."
+        else
+            echo "Failed to modify the SDDM configuration. Exiting script."
+            exit 1
+        fi
+    else
+        echo "$SDDM_CONF not found. Exiting script."
+        exit 1
+    fi
+
+    if plasma-apply-wallpaperimage "/usr/share/wallpapers/Reef/reef.png"; then
+        echo "Wallpaper applied successfully."
+    else
+        echo "Failed to apply wallpaper."
+        exit 1
+    fi
+
+    if systemctl --user restart plasma-plasmashell; then 
+        echo "Plasma shell restarted successfully."
+    else
+        echo "Failed to restart Plasma shell."
+        exit 1
+    fi
 }
 
 # Main script
@@ -270,7 +244,6 @@ main() {
     configure_git
     install_bash_it
     mod_my_plasma
-    setup_android_env
 }
 
 main
