@@ -176,6 +176,13 @@ mod_my_plasma() {
         exit 1
     fi
 
+    if systemctl --user restart plasma-plasmashell; then 
+        echo "Plasma shell restarted successfully."
+    else
+        echo "Failed to restart Plasma shell."
+        exit 1
+    fi
+
     # Change icon theme
     if [[ -d "/usr/share/icons/Papirus-Dark" ]] && /usr/lib/plasma-changeicons Papirus-Dark; then
         echo "Icon theme changed to Papirus-Dark."
@@ -224,12 +231,6 @@ mod_my_plasma() {
         exit 1
     fi
 
-    if systemctl --user restart plasma-plasmashell; then 
-        echo "Plasma shell restarted successfully."
-    else
-        echo "Failed to restart Plasma shell."
-        exit 1
-    fi
 }
 
 # Main script
