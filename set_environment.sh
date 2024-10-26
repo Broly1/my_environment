@@ -16,7 +16,7 @@ check_for_internet() {
 install_pacman_packages() {
     ARCH_PACKAGES=("sed" "bluez" "bluez-utils" "telegram-desktop" "git" "less" "base-devel" "dosfstools" "rust" "firefox" \
                    "papirus-icon-theme" "spectacle" "gwenview" "kdeconnect" "kcalc" "packagekit-qt6" \
-                   "flatpak" "gnome-disk-utility" "qbittorrent" "gimp" "plasma-workspace")
+                   "flatpak" "gnome-disk-utility" "qbittorrent" "gimp" "plasma-workspace" "power-profiles-daemon")
 
     echo "Installing pacman packages: ${ARCH_PACKAGES[*]}"
 
@@ -139,36 +139,9 @@ install_bash_it() {
 }
 
 mod_my_plasma() {
-    ORIG_CONF_DIR="$HOME/.config"
-    CUST_CONF_DIR="plasma-config"
-    BACKUP_DIR="$HOME/.config/backup"
-    ORIG_SDDM_THEME="/usr/share/sddm/themes/breeze"
-    SDDM_CONF="/usr/lib/sddm/sddm.conf.d/default.conf"
-    DEST_CONF="/etc/sddm.conf"
-    TMP_FILE="/tmp/sddm.conf.modified"
+      # Change look and feel
+      CUST_CONF_DIR="plasma-config"
 
-    # Backup existing configuration files and install my custom ones
-        mkdir -p "$BACKUP_DIR"
-        FILES=("plasma-org.kde.plasma.desktop-appletsrc" "plasmashellrc" "kwinrc" "powerdevilrc" "kscreenlockerrc")
-
-        for FILE in "${FILES[@]}"; do
-            if [ -f "$ORIG_CONF_DIR/$FILE" ]; then
-                echo "Backing up $FILE to $BACKUP_DIR/${FILE}.bak"
-                cp "$ORIG_CONF_DIR/$FILE" "$BACKUP_DIR/$FILE.bak"
-                rm -rf "$ORIG_CONF_DIR/$FILE"
-            else
-                echo "File $FILE does not exist in $ORIG_CONF_DIR, skipping backup."
-            fi
-
-            if [ -f "$CUST_CONF_DIR/$FILE" ]; then
-                echo "Copying modified $FILE from $CUST_CONF_DIR to $ORIG_CONF_DIR"
-                cp "$CUST_CONF_DIR/$FILE" "$ORIG_CONF_DIR/$FILE"
-            else
-                echo "Modified file $FILE not found in $CUST_CONF_DIR, skipping overwrite."
-            fi
-        done
-
-    # Change look and feel
     if lookandfeeltool -a org.kde.breezedark.desktop; then
         echo "Look and feel changed to breeze dark."
     else
@@ -192,39 +165,14 @@ mod_my_plasma() {
     fi
 
     # Set wallpaper and update SDDM theme
-    if [ -d "$CUST_CONF_DIR/wallpaper/Reef" ]; then
-        sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/" "/usr/share/wallpapers/"
+    if [ -d "$CUST_CONF_DIR/wallpaper/MyWallpapers" ]; then
+        sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/"
     else
         echo "Failed to copy wallpapers."
         exit 1
     fi
 
-    if [ -d "$ORIG_SDDM_THEME" ]; then
-        sudo cp -r "$CUST_CONF_DIR/theme.conf.user" "$ORIG_SDDM_THEME"
-        sudo cp -r "$CUST_CONF_DIR/wallpaper/Reef/reef.png" "$ORIG_SDDM_THEME"
-    else
-        echo "SDDM theme directory not found."
-        exit 1
-    fi
-
-    if [ -f "$SDDM_CONF" ]; then
-        echo "Enabling Breeze SDDM theme..."
-        [ ! -f "$DEST_CONF" ] && sudo cp "$SDDM_CONF" "$DEST_CONF"
-        sudo cp "$DEST_CONF" "$TMP_FILE"
-
-        if sudo sed -i 's/Current=.*/Current=breeze/; s/CursorTheme=.*/CursorTheme=breeze/' "$TMP_FILE"; then
-            sudo mv "$TMP_FILE" "$DEST_CONF"
-            echo "Breeze SDDM theme enabled..."
-        else
-            echo "Failed to modify the SDDM configuration. Exiting script."
-            exit 1
-        fi
-    else
-        echo "$SDDM_CONF not found. Exiting script."
-        exit 1
-    fi
-
-    if plasma-apply-wallpaperimage "/usr/share/wallpapers/Reef/reef.png"; then
+    if plasma-apply-wallpaperimage "/usr/share/wallpapers/MyWallpapers/Loop_Mac.png"; then
         echo "Wallpaper applied successfully."
     else
         echo "Failed to apply wallpaper."
