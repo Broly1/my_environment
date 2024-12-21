@@ -15,7 +15,7 @@ check_for_internet() {
 # Install packages using pacman if not already installed
 install_pacman_packages() {
     ARCH_PACKAGES=("sed" "bluez" "bluez-utils" "telegram-desktop" "git" "less" "base-devel" "dosfstools" "rust" "firefox" \
-                   "papirus-icon-theme" "spectacle" "gwenview" "kdeconnect" "kcalc" "packagekit-qt6" \
+                   "spectacle" "gwenview" "kdeconnect" "kcalc" \
                    "flatpak" "gnome-disk-utility" "qbittorrent" "gimp" "plasma-workspace" "power-profiles-daemon")
 
     echo "Installing pacman packages: ${ARCH_PACKAGES[*]}"
@@ -50,7 +50,7 @@ install_paru() {
 
 # Install AUR packages using paru
 install_aur_packages() {
-    PARU_PACKAGES=("vscodium-bin" "papirus-folders")
+    PARU_PACKAGES=("vscodium-bin")
     echo "Installing AUR packages: ${PARU_PACKAGES[*]}"
 
     for PACKAGE in "${PARU_PACKAGES[@]}"; do
@@ -61,7 +61,6 @@ install_aur_packages() {
         fi
     done
 
-    papirus-folders -C breeze --theme Papirus-Dark
 }
 
 # Enable Bluetooth and auto-enable devices
@@ -156,14 +155,6 @@ mod_my_plasma() {
         exit 1
     fi
 
-    # Change icon theme
-    if [[ -d "/usr/share/icons/Papirus-Dark" ]] && /usr/lib/plasma-changeicons Papirus-Dark; then
-        echo "Icon theme changed to Papirus-Dark."
-    else
-        echo "Error: Icon theme 'Papirus-Dark' not found or failed to change."
-        exit 1
-    fi
-
     # Set wallpaper and update SDDM theme
     if [ -d "$CUST_CONF_DIR/wallpaper/MyWallpapers" ]; then
         sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/"
@@ -178,6 +169,10 @@ mod_my_plasma() {
         echo "Failed to apply wallpaper."
         exit 1
     fi
+
+    balooctl6 suspend
+    balooctl6 disable
+    balooctl6 purge
 
 }
 
