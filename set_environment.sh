@@ -117,7 +117,11 @@ enable_bluetooth() {
 configure_pacman() {
     sudo cp /etc/pacman.conf /etc/pacman.conf.backup || { echo "Failed to back up pacman.conf."; exit 1; }
     sudo sed -i 's/#Color/Color/' /etc/pacman.conf || { echo "Failed to enable Color."; exit 1; }
+if ! grep -q "^ILoveCandy$" /etc/pacman.conf; then
     sudo sed -i '/^Color$/a ILoveCandy' /etc/pacman.conf || { echo "Failed to add ILoveCandy."; exit 1; }
+else
+    echo "ILoveCandy is already present in /etc/pacman.conf. Skipping addition."
+fi
     sudo sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 15/' /etc/pacman.conf || { echo "Failed to enable ParallelDownloads."; exit 1; }
 
     echo "Pacman color, ILoveCandy, and parallel downloads enabled."
