@@ -1,11 +1,31 @@
 #!/bin/bash
 
+log="my_env_log.txt"
+banner() {
+
+cat <<'EOF'
+
+
+▀█▀ 　 █░░█ █▀▀ █▀▀ 　 
+▒█░ 　 █░░█ ▀▀█ █▀▀ 　 
+▄█▄ 　 ░▀▀▀ ▀▀▀ ▀▀▀ 　 
+
+░█▀▀█ █▀▀█ █▀▀ █░░█ 　 
+▒█▄▄█ █▄▄▀ █░░ █▀▀█ 　 
+▒█░▒█ ▀░▀▀ ▀▀▀ ▀░░▀ 　 
+
+█▀▀▄ ▀▀█▀▀ █░░░█ 
+█▀▀▄ ░░█░░ █▄█▄█ 
+▀▀▀░ ░░▀░░ ░▀░▀░
+
+EOF
+}
+
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf $TEMP_DIR' EXIT
 
 # Check for internet connectivity
 check_for_internet() {
-    clear
     if ! ping -q -c 1 -W 1 google.com >/dev/null 2>&1; then
         echo "No internet connection. Unable to download dependencies."
         exit 1
@@ -14,15 +34,37 @@ check_for_internet() {
 
 # Install packages using pacman if not already installed
 install_pacman_packages() {
-    ARCH_PACKAGES=("sed" "bluez" "bluez-utils" "telegram-desktop" "git" "less" "base-devel" "dosfstools" "rust" "firefox" \
-                   "spectacle" "gwenview" "kdeconnect" "kcalc" \
-                   "flatpak" "gnome-disk-utility" "qbittorrent" "gimp" "plasma-workspace" "power-profiles-daemon")
+    ARCH_PACKAGES=(
+        "sed"
+        "bluez"
+        "bluez-utils"
+        "telegram-desktop"
+        "git"
+        "less"
+        "fastfetch"
+        "base-devel"
+        "dosfstools"
+        "rust"
+        "firefox"
+        "spectacle"
+        "gwenview"
+        "kdeconnect"
+        "kcalc"
+        "flatpak"
+        "gnome-disk-utility"
+        "qbittorrent"
+        "gimp"
+        "plasma-workspace"
+        "power-profiles-daemon"
+    )
 
-    echo "Installing pacman packages: ${ARCH_PACKAGES[*]}"
+    clear
+    banner "$@"
 
     if [[ -f /etc/arch-release ]]; then
         for PACKAGE in "${ARCH_PACKAGES[@]}"; do
             if ! pacman -Q "$PACKAGE" >/dev/null 2>&1; then
+                echo "$PACKAGE is missing, installing..."
                 sudo pacman -Sy --noconfirm --needed "$PACKAGE"
             else
                 echo "$PACKAGE is already installed."
@@ -50,130 +92,94 @@ install_paru() {
 
 # Install AUR packages using paru
 install_aur_packages() {
-    PARU_PACKAGES=("vscodium-bin")
-    echo "Installing AUR packages: ${PARU_PACKAGES[*]}"
+    PARU_PACKAGES=(
+        "vscodium-bin"
+    )
 
     for PACKAGE in "${PARU_PACKAGES[@]}"; do
         if ! paru -Q "$PACKAGE" >/dev/null 2>&1; then
+            echo "$PACKAGE is not installed. Installing..."
             paru -S --noconfirm --needed "$PACKAGE"
-        else
-            echo "$PACKAGE is already installed."
         fi
     done
-
 }
 
 # Enable Bluetooth and auto-enable devices
 enable_bluetooth() {
-    if [[ -f /etc/bluetooth/main.conf ]]; then
-        sudo cp /etc/bluetooth/main.conf /etc/bluetooth/main.conf.backup
-        if sudo sed -i 's/#AutoEnable=true/AutoEnable=true/' /etc/bluetooth/main.conf; then
-            sudo systemctl start bluetooth.service
-            sudo systemctl enable bluetooth.service
-            echo "Bluetooth configuration successful."
-        else
-            echo "Failed to configure Bluetooth."
-            exit 1
-        fi
-    else
-        echo "Bluetooth configuration file not found!"
-        exit 1
-    fi
+    sudo cp /etc/bluetooth/main.conf /etc/bluetooth/main.conf.backup || { echo "Failed to back up Bluetooth configuration."; exit 1; }
+    sudo sed -i 's/#AutoEnable=true/AutoEnable=true/' /etc/bluetooth/main.conf || { echo "Failed to configure Bluetooth."; exit 1; }   
+    sudo systemctl start bluetooth.service
+    sudo systemctl enable bluetooth.service
+    echo "Bluetooth configuration successful."
 }
 
-# Enable pacman color and parallel downloads
+# Enable pacman color, ILoveCandy, and parallel downloads
 configure_pacman() {
-    if [[ -f /etc/pacman.conf ]]; then
-        sudo cp /etc/pacman.conf /etc/pacman.conf.backup
-        if sudo sed -i 's/#Color/Color/' /etc/pacman.conf && sudo sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 15/' /etc/pacman.conf; then
-            echo "Pacman color and parallel downloads enabled."
-        else
-            echo "Failed to configure pacman."
-            exit 1
-        fi
-    else
-        echo "pacman.conf not found!"
-        exit 1
-    fi
+    sudo cp /etc/pacman.conf /etc/pacman.conf.backup || { echo "Failed to back up pacman.conf."; exit 1; }
+    sudo sed -i 's/#Color/Color/' /etc/pacman.conf || { echo "Failed to enable Color."; exit 1; }
+    sudo sed -i '/^Color$/a ILoveCandy' /etc/pacman.conf || { echo "Failed to add ILoveCandy."; exit 1; }
+    sudo sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 15/' /etc/pacman.conf || { echo "Failed to enable ParallelDownloads."; exit 1; }
+
+    echo "Pacman color, ILoveCandy, and parallel downloads enabled."
+}
+
+# Fix Breeze cursor theme
+fix_breeze_cursor() {
+    sudo cp /usr/share/icons/default/index.theme /usr/share/icons/default/index.theme.backup || { echo "Failed to back up index.theme."; exit 1; }
+    sudo sed -i 's/Inherits=[^ ]*/Inherits=breeze_cursors/' /usr/share/icons/default/index.theme || { echo "Failed to configure index.theme."; exit 1; }
+    echo "Fixed Adwaita mouse pointer on some apps and SDDM."
 }
 
 # Configure zram swap
 configure_zram() {
-    if [[ -f /etc/systemd/zram-generator.conf ]]; then
-        sudo cp /etc/systemd/zram-generator.conf /etc/systemd/zram-generator.conf.backup
-        if sudo tee /etc/systemd/zram-generator.conf >/dev/null <<EOF
+    sudo cp /etc/systemd/zram-generator.conf /etc/systemd/zram-generator.conf.backup || { echo "Failed to back up zram configuration."; exit 1; }
+    sudo tee /etc/systemd/zram-generator.conf >/dev/null <<EOF || { echo "Failed to configure zram."; exit 1; }
 [zram0]
 zram-size = ram
 EOF
-        then
-            echo "Zram configuration successful."
-        else
-            echo "Failed to configure zram."
-            exit 1
-        fi
-    else
-        echo "Zram configuration file not found!"
-        exit 1
-    fi
-}
-
-# Set Git editor to nano
-configure_git() {
-    git config --global core.editor "nano"
 }
 
 # Bash-it setup and theme change
 install_bash_it() {
-    rm -rf "$HOME/.bash_it"
-    git clone --depth=1 https://github.com/Bash-it/bash-it.git "$TEMP_DIR/bash-it"
-    mv "$TEMP_DIR/bash-it" ~/.bash_it
-    ~/.bash_it/install.sh --silent -f
-    rm -rf "$TEMP_DIR"
-    if sudo sed -i "s/^export BASH_IT_THEME=.*/export BASH_IT_THEME='zork'/" ~/.bashrc; then
-        echo "Bash-it theme changed to 'zork'."
-    else
-        echo "Failed to change Bash-it theme."
-        exit 1
-    fi
+    clear
+    banner "$@"
+    rm -rf "$HOME/.bash_it" || { echo "removing existing bash-it directory if it exist."; }
+    git clone --depth=1 https://github.com/Bash-it/bash-it.git "$TEMP_DIR/bash-it" || { echo "Failed to clone bash-it repository."; exit 1; }
+    mv "$TEMP_DIR/bash-it" ~/.bash_it || { echo "Failed to move bash-it to ~/.bash_it."; exit 1; }
+    ~/.bash_it/install.sh --silent -f || { echo "Failed to install bash-it."; exit 1; }
+    rm -rf "$TEMP_DIR" || { echo "Failed to remove temporary directory."; exit 1; }
+    sudo sed -i "s/^export BASH_IT_THEME=.*/export BASH_IT_THEME='zork'/" ~/.bashrc || { echo "Failed to change Bash-it theme."; exit 1; }
+    echo "Bash-it theme changed to 'zork'."
 }
 
 mod_my_plasma() {
-      # Change look and feel
-      CUST_CONF_DIR="plasma-config"
+    # Change look and feel
+    CUST_CONF_DIR="plasma-config"
 
-    if lookandfeeltool -a org.kde.breezedark.desktop; then
-        echo "Look and feel changed to breeze dark."
-    else
-        echo "Look and feel failed to change theme."
-        exit 1
-    fi
+    lookandfeeltool -a org.kde.breezedark.desktop || { echo "Look and feel failed to change theme."; exit 1; }
+    echo "Look and feel changed to breeze dark."
 
-    if systemctl --user restart plasma-plasmashell; then 
-        echo "Plasma shell restarted successfully."
-    else
-        echo "Failed to restart Plasma shell."
-        exit 1
-    fi
+    systemctl --user restart plasma-plasmashell || { echo "Failed to restart Plasma shell."; exit 1; }
+    echo "Plasma shell restarted successfully."
 
     # Set wallpaper and update SDDM theme
     if [ -d "$CUST_CONF_DIR/wallpaper/MyWallpapers" ]; then
-        sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/"
+        sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/" || { echo "Failed to copy wallpapers."; exit 1; }
     else
-        echo "Failed to copy wallpapers."
+        echo "Directory $CUST_CONF_DIR/wallpaper/MyWallpapers does not exist."
         exit 1
     fi
 
-    if plasma-apply-wallpaperimage "/usr/share/wallpapers/MyWallpapers/Loop_Mac.png"; then
-        echo "Wallpaper applied successfully."
-    else
-        echo "Failed to apply wallpaper."
-        exit 1
-    fi
+    plasma-apply-wallpaperimage "/usr/share/wallpapers/MyWallpapers/Loop_Mac.png" || { echo "Failed to apply wallpaper."; exit 1; }
+    echo "Wallpaper applied successfully."
 
-    balooctl6 suspend
-    balooctl6 disable
-    balooctl6 purge
+    balooctl6 suspend || { echo "Failed to suspend baloo."; exit 1; }
+    balooctl6 disable || { echo "Failed to disable baloo."; exit 1; }
+    balooctl6 purge || { echo "Failed to purge baloo."; exit 1; }
 
+    # Set Git editor to nano
+    git config --global core.editor "nano" || { echo "Failed to set git editor to nano."; exit 1; }
+    echo "git editor set to nano"
 }
 
 # Main script
@@ -184,10 +190,10 @@ main() {
     install_aur_packages
     enable_bluetooth
     configure_pacman
+    fix_breeze_cursor
     configure_zram
-    configure_git
     install_bash_it
     mod_my_plasma
 }
 
-main
+main | tee "$log" 
