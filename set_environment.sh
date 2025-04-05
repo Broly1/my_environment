@@ -143,17 +143,21 @@ zram-size = ram
 EOF
 }
 
-# Bash-it setup and theme change
+# Custom bash theme
 install_bash_it() {
     clear
     banner "$@"
-    rm -rf "$HOME/.bash_it" || { echo "removing existing bash-it directory if it exist."; }
-    git clone --depth=1 https://github.com/Bash-it/bash-it.git "$TEMP_DIR/bash-it" || { echo "Failed to clone bash-it repository."; exit 1; }
-    mv "$TEMP_DIR/bash-it" ~/.bash_it || { echo "Failed to move bash-it to ~/.bash_it."; exit 1; }
-    ~/.bash_it/install.sh --silent -f || { echo "Failed to install bash-it."; exit 1; }
-    rm -rf "$TEMP_DIR" || { echo "Failed to remove temporary directory."; exit 1; }
-    sudo sed -i "s/^export BASH_IT_THEME=.*/export BASH_IT_THEME='zork'/" ~/.bashrc || { echo "Failed to change Bash-it theme."; exit 1; }
-    echo "Bash-it theme changed to 'zork'."
+    custom_prompt='PS1='\''\[\e[38;2;22;160;133m\]\u@\h:\[\e[38;2;253;188;75m\]\w\[\e[38;2;22;160;133m\]\$\[\e[0m\] '\'
+
+    if grep -Fxq "$custom_prompt" ~/.bashrc; then
+        echo "Custom prompt already exists in ~/.bashrc."
+    else
+        sed -i '/^PS1=/d' ~/.bashrc
+        echo "$custom_prompt" >> ~/.bashrc
+        echo "Custom prompt applied."
+    fi
+
+    source ~/.bashrc
 }
 
 mod_my_plasma() {
