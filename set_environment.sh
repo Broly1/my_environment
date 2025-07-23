@@ -37,6 +37,7 @@ install_pacman_packages() {
     ARCH_PACKAGES=(
         "sed"
         "bluez"
+        "noto-fonts-cjk"
         "bluez-utils"
         "telegram-desktop"
         "git"
