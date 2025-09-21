@@ -172,15 +172,15 @@ mod_my_plasma() {
     echo "Plasma shell restarted successfully."
 
     # Set wallpaper and update SDDM theme
-    if [ -d "$CUST_CONF_DIR/wallpaper/MyWallpapers" ]; then
-        sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/" || { echo "Failed to copy wallpapers."; exit 1; }
-    else
-        echo "Directory $CUST_CONF_DIR/wallpaper/MyWallpapers does not exist."
-        exit 1
-    fi
+    # if [ -d "$CUST_CONF_DIR/wallpaper/MyWallpapers" ]; then
+    #    sudo cp -r "$CUST_CONF_DIR/wallpaper/MyWallpapers/" "/usr/share/wallpapers/" || { echo "Failed to copy wallpapers."; exit 1; }
+    # else
+    #    echo "Directory $CUST_CONF_DIR/wallpaper/MyWallpapers does not exist."
+    #    exit 1
+    # fi
 
-    plasma-apply-wallpaperimage "/usr/share/wallpapers/MyWallpapers/Loop_Mac.png" || { echo "Failed to apply wallpaper."; exit 1; }
-    echo "Wallpaper applied successfully."
+    # plasma-apply-wallpaperimage "/usr/share/wallpapers/MyWallpapers/Loop_Mac.png" || { echo "Failed to apply wallpaper."; exit 1; }
+    # echo "Wallpaper applied successfully."
 
     balooctl6 suspend || { echo "Failed to suspend baloo."; exit 1; }
     balooctl6 disable || { echo "Failed to disable baloo."; exit 1; }
