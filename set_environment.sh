@@ -77,30 +77,30 @@ install_pacman_packages() {
     fi
 }
 
-# Install paru AUR helper if not already installed
-install_paru() {
-    if ! pacman -Q paru >/dev/null 2>&1; then
-        echo "paru is not installed. Installing..."
-        git clone https://aur.archlinux.org/paru-bin.git "$TEMP_DIR/paru-bin"
-        cd "$TEMP_DIR/paru-bin" || exit
+# Install yay AUR helper if not already installed
+install_yay() {
+    if ! pacman -Q yay >/dev/null 2>&1; then
+        echo "yay is not installed. Installing..."
+        git clone https://aur.archlinux.org/yay-bin.git "$TEMP_DIR/yay-bin"
+        cd "$TEMP_DIR/yay-bin" || exit
         makepkg -si --noconfirm
         cd - || exit  
-        rm -rf "$TEMP_DIR/paru-bin"
+        rm -rf "$TEMP_DIR/yay-bin"
     else
-        echo "paru is already installed."
+        echo "yay is already installed."
     fi
 }
 
-# Install AUR packages using paru
+# Install AUR packages using yay
 install_aur_packages() {
     PARU_PACKAGES=(
         "vscodium-bin"
     )
 
     for PACKAGE in "${PARU_PACKAGES[@]}"; do
-        if ! paru -Q "$PACKAGE" >/dev/null 2>&1; then
+        if ! yay -Q "$PACKAGE" >/dev/null 2>&1; then
             echo "$PACKAGE is not installed. Installing..."
-            paru -S --noconfirm --needed "$PACKAGE"
+            yay -S --noconfirm --needed "$PACKAGE"
         fi
     done
 }
@@ -195,7 +195,7 @@ mod_my_plasma() {
 main() {
     check_for_internet
     install_pacman_packages
-    install_paru
+    install_yay
     install_aur_packages
     enable_bluetooth
     configure_pacman
